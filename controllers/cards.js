@@ -36,8 +36,13 @@ module.exports.putLike = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => res.send({ data: card }))
-    .catch((err) => throwCardError(err, res));
+    .then((card) => {
+      if (card !== null) {
+        return res.send({ data: card });
+      }
+      return res.status(404).send({ message: 'Карточка не найдена' });
+    })
+    .catch(() => res.status(400).send({ message: 'Переданы некорректные данные' }));
 };
 
 module.exports.deleteLike = (req, res) => {

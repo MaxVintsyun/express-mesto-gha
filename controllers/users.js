@@ -18,8 +18,13 @@ module.exports.getUsers = (req, res) => {
 
 module.exports.getUser = (req, res) => {
   User.findById(req.params.userId)
-    .then((user) => res.send({ data: user }))
-    .catch((err) => throwUserError(err, res));
+    .then((user) => {
+      if (user !== null) {
+        return res.send({ data: user });
+      }
+      return res.status(404).send({ message: 'Пользователь не найден' });
+    })
+    .catch(() => res.status(400).send({ message: 'Переданы некорректные данные' }));
 };
 
 module.exports.createUser = (req, res) => {
@@ -32,7 +37,15 @@ module.exports.createUser = (req, res) => {
 
 module.exports.updateUser = (req, res) => {
   const { name, about } = req.body;
-  User.findByIdAndUpdate(req.user._id, { name, about })
+  User.findByIdAndUpdate(
+    req.user._id,
+    { name, about },
+    {
+      new: true,
+      runValidators: true,
+      upsert: true,
+    },
+  )
     .then((user) => res.send({ data: user }))
     .catch((err) => throwUserError(err, res));
 };
