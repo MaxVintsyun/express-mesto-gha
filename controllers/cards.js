@@ -1,9 +1,19 @@
 const Card = require('../models/card');
 
+function throwCardError(err, res) {
+  if (err.name === 'ValidationError') {
+    return res.status(400).send({ message: 'Переданы некорректные данные' });
+  }
+  if (err.name === 'CastError') {
+    return res.status(404).send({ message: 'Карточка не найдена' });
+  }
+  return res.status(500).send({ message: 'Внутренняя ошибка сервера' });
+}
+
 module.exports.getCards = (req, res) => {
   Card.find({})
     .then((cards) => res.send({ data: cards }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => throwCardError(err, res));
 };
 
 module.exports.createCard = (req, res) => {
@@ -11,13 +21,13 @@ module.exports.createCard = (req, res) => {
 
   Card.create({ name, link, owner: req.user._id })
     .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => throwCardError(err, res));
 };
 
 module.exports.deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
     .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => throwCardError(err, res));
 };
 
 module.exports.putLike = (req, res) => {
@@ -27,7 +37,7 @@ module.exports.putLike = (req, res) => {
     { new: true },
   )
     .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => throwCardError(err, res));
 };
 
 module.exports.deleteLike = (req, res) => {
@@ -37,5 +47,5 @@ module.exports.deleteLike = (req, res) => {
     { new: true },
   )
     .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => throwCardError(err, res));
 };
