@@ -1,11 +1,8 @@
 const User = require('../models/user');
 
 function throwUserError(err, res) {
-  if (err.name === 'ValidationError') {
+  if (err.name === 'ValidationError' || err.name === 'CastError') {
     return res.status(400).send({ message: 'Переданы некорректные данные' });
-  }
-  if (err.name === 'CastError') {
-    return res.status(404).send({ message: 'Пользователь не найден' });
   }
   return res.status(500).send({ message: 'Внутренняя ошибка сервера' });
 }
@@ -18,20 +15,22 @@ module.exports.getUsers = (req, res) => {
 
 module.exports.getUser = (req, res) => {
   User.findById(req.params.userId)
-    .then((user) => {
-      if (user !== null) {
-        return res.send({ data: user });
+    .orFail(new Error('NotValidId'))
+    .then((user) => res.send({ data: user }))
+    .catch((err) => {
+      if (err.message === 'NotValidId') {
+        res.status(404).send({ message: 'Пользователь не найден' });
+      } else {
+        throwUserError(err, res);
       }
-      return res.status(404).send({ message: 'Пользователь не найден' });
-    })
-    .catch(() => res.status(400).send({ message: 'Переданы некорректные данные' }));
+    });
 };
 
 module.exports.createUser = (req, res) => {
   const { name, about, avatar } = req.body;
 
   User.create({ name, about, avatar })
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.status(201).send({ data: user }))
     .catch((err) => throwUserError(err, res));
 };
 
