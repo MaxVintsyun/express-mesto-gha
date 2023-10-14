@@ -21,13 +21,18 @@ module.exports.createCard = (req, res) => {
 
   Card.create({ name, link, owner: req.user._id })
     .then((card) => res.send({ data: card }))
-    .catch((err) => throwCardError(err, res));
+    .catch((err) => res.status(500).send({ message: err.message }));
 };
 
 module.exports.deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
-    .then((card) => res.send({ data: card }))
-    .catch((err) => throwCardError(err, res));
+    .then((card) => {
+      if (card !== null) {
+        return res.send({ data: card });
+      }
+      return res.status(404).send({ message: 'Карточка не найдена' });
+    })
+    .catch(() => res.status(400).send({ message: 'Переданы некорректные данные' }));
 };
 
 module.exports.putLike = (req, res) => {
@@ -51,6 +56,11 @@ module.exports.deleteLike = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => res.send({ data: card }))
-    .catch((err) => throwCardError(err, res));
+    .then((card) => {
+      if (card !== null) {
+        return res.send({ data: card });
+      }
+      return res.status(404).send({ message: 'Карточка не найдена' });
+    })
+    .catch(() => res.status(400).send({ message: 'Переданы некорректные данные' }));
 };

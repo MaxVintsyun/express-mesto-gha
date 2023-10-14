@@ -21,4 +21,8 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
+app.use((req, res) => {
+  res.status(404).send({ message: 'Некорректный путь' });
+});
+
 app.listen(PORT);
