@@ -25,10 +25,10 @@ module.exports.deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
     .orFail(new Error('NotValidId'))
     .then((card) => {
-      if (card !== null) {
+      if (card.owner === req.user._id) {
         return res.send({ data: card });
       }
-      return res.status(404).send({ message: 'Карточка не найдена' });
+      return res.status(403).send({ message: 'Вы не являетесь владельцем карточки' });
     })
     .catch((err) => {
       if (err.message === 'NotValidId') {

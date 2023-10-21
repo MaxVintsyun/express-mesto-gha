@@ -1,4 +1,9 @@
+require('dotenv').config();
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+
+const { NODE_ENV, JWT_SECRET } = process.env;
 
 function throwUserError(err, res) {
   if (err.name === 'ValidationError' || err.name === 'CastError') {
@@ -26,10 +31,36 @@ module.exports.getUser = (req, res) => {
     });
 };
 
-module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
+module.exports.getCurrentUser = (req, res) => {
+  User.findById(req.user._id)
+    .orFail(new Error('NotValidId'))
+    .then((user) => res.send({ data: user }))
+    .catch((err) => {
+      if (err.message === 'NotValidId') {
+        res.status(404).send({ message: 'Пользователь не найден' });
+      } else {
+        throwUserError(err, res);
+      }
+    });
+};
 
-  User.create({ name, about, avatar })
+module.exports.createUser = (req, res) => {
+  const {
+    email,
+    password,
+    name,
+    about,
+    avatar,
+  } = req.body;
+
+  bcrypt.hash(password, 10)
+    .then((hash) => User.create({
+      email,
+      hash,
+      name,
+      about,
+      avatar,
+    }))
     .then((user) => res.status(201).send({ data: user }))
     .catch((err) => throwUserError(err, res));
 };
@@ -63,4 +94,27 @@ module.exports.updateUserAvatar = (req, res) => {
   )
     .then((user) => res.send({ data: user }))
     .catch((err) => throwUserError(err, res));
+};
+
+module.exports.login = (req, res) => {
+  const { email, password } = req.body;
+
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign(
+        { _id: user._id },
+        NODE_ENV === 'production' ? JWT_SECRET : 'super-strong-secret',
+        { expiresIn: '7d' },
+      );
+
+      res.cookie('jwt', token, {
+        maxAge: 3600000 * 24 * 7,
+        httpOnly: true,
+        sameSite: true,
+      });
+      res.send('Вы успешно авторизованы!');
+    })
+    .catch((err) => {
+      res.status(401).send({ message: err.message });
+    });
 };
