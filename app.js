@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const { createUser, login } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 
@@ -9,6 +10,7 @@ const app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 mongoose.connect(DB_URL);
 
@@ -16,7 +18,6 @@ app.post('/signin', login);
 app.post('/signup', createUser);
 
 app.use(auth);
-
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 

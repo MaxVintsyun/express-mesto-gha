@@ -46,20 +46,11 @@ module.exports.getCurrentUser = (req, res) => {
 
 module.exports.createUser = (req, res) => {
   const {
-    email,
-    password,
-    name,
-    about,
-    avatar,
+    email, password, name, about, avatar,
   } = req.body;
-
   bcrypt.hash(password, 10)
     .then((hash) => User.create({
-      email,
-      hash,
-      name,
-      about,
-      avatar,
+      email, password: hash, name, about, avatar,
     }))
     .then((user) => res.status(201).send({ data: user }))
     .catch((err) => throwUserError(err, res));
@@ -99,7 +90,7 @@ module.exports.updateUserAvatar = (req, res) => {
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
 
-  return User.findUserByCredentials(email, password)
+  User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign(
         { _id: user._id },

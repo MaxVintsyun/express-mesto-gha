@@ -7,13 +7,12 @@ const handleAuthError = (res) => {
 };
 
 module.exports = (req, res, next) => {
-  const { authorization } = req.headers;
+  const token = req.cookies.jwt;
 
-  if (!authorization || !authorization.startsWith('Bearer ')) {
+  if (!token) {
     return handleAuthError(res);
   }
 
-  const token = authorization.replace('Bearer ', '');
   let payload;
 
   try {
