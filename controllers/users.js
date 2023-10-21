@@ -103,7 +103,7 @@ module.exports.login = (req, res) => {
         httpOnly: true,
         sameSite: true,
       });
-      res.send('Вы успешно авторизованы!');
+      res.send({ message: 'Вы успешно авторизованы!' });
     })
     .catch((err) => {
       res.status(401).send({ message: err.message });
