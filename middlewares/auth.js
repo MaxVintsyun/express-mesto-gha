@@ -11,7 +11,7 @@ module.exports = (req, res, next) => {
   const token = req.cookies.jwt;
 
   if (!token) {
-    return handleAuthError(res);
+    return handleAuthError(res, next);
   }
 
   let payload;
@@ -19,7 +19,7 @@ module.exports = (req, res, next) => {
   try {
     payload = jwt.verify(token, NODE_ENV === 'production' ? JWT_SECRET : 'super-strong-secret');
   } catch (err) {
-    return handleAuthError(res);
+    return handleAuthError(res, next);
   }
 
   req.user = payload;
