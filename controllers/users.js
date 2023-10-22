@@ -92,22 +92,26 @@ module.exports.updateUserAvatar = (req, res, next) => {
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
 
-  User.findUserByCredentials(email, password)
-    .then((user) => {
-      const token = jwt.sign(
-        { _id: user._id },
-        NODE_ENV === 'production' ? JWT_SECRET : 'super-strong-secret',
-        { expiresIn: '7d' },
-      );
+  if (email && password) {
+    User.findUserByCredentials(email, password)
+      .then((user) => {
+        const token = jwt.sign(
+          { _id: user._id },
+          NODE_ENV === 'production' ? JWT_SECRET : 'super-strong-secret',
+          { expiresIn: '7d' },
+        );
 
-      res.cookie('jwt', token, {
-        maxAge: 3600000 * 24 * 7,
-        httpOnly: true,
-        sameSite: true,
+        res.cookie('jwt', token, {
+          maxAge: 3600000 * 24 * 7,
+          httpOnly: true,
+          sameSite: true,
+        });
+        res.send({ message: 'Вы успешно авторизованы!' });
+      })
+      .catch((err) => {
+        res.status(401).send({ message: err.message });
       });
-      res.send({ message: 'Вы успешно авторизованы!' });
-    })
-    .catch((err) => {
-      res.status(401).send({ message: err.message });
-    });
+  } else {
+    res.status(400).send({ message: 'Одно из полей заполнено некорректно' });
+  }
 };
