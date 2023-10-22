@@ -28,15 +28,15 @@ module.exports.createCard = (req, res, next) => {
 };
 
 module.exports.deleteCard = (req, res, next) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  Card.findById(req.params.cardId)
     .orFail(new Error('NotValidId'))
     .then((card) => {
-      console.log(card.owner.toString(), req.user._id);
       if (card.owner.toString() !== req.user._id) {
         throw new ForbiddenError('Вы не являетесь владельцем карточки');
       }
-      return res.status(200).send({ data: card });
+      return Card.findByIdAndRemove(req.params.cardId);
     })
+    .then((card) => res.status(200).send({ data: card }))
     .catch((err) => next(throwCardError(err)));
 };
 

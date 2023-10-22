@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const NotFoundError = require('../errors/NotFoundError');
 const BadRequestError = require('../errors/BadRequestError');
-// const UnauthorizedError = require('../errors/UnauthorizedError');
+const UnauthorizedError = require('../errors/UnauthorizedError');
 const ConflictError = require('../errors/ConflictError');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
@@ -89,7 +89,7 @@ module.exports.updateUserAvatar = (req, res, next) => {
     .catch((err) => next(throwUserError(err)));
 };
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
   if (email && password) {
@@ -109,9 +109,9 @@ module.exports.login = (req, res) => {
         res.send({ message: 'Вы успешно авторизованы!' });
       })
       .catch((err) => {
-        res.status(401).send({ message: err.message });
+        next(new UnauthorizedError(err.message));
       });
   } else {
-    res.status(400).send({ message: 'Одно из полей заполнено некорректно' });
+    next(new BadRequestError('Одно из полей заполнено некорректно'));
   }
 };
